@@ -23,9 +23,6 @@ public class Register {
         this.role = role;
     }
 
-    public Register() {
-    }
-
     public String getUsername() {
         return username;
     }
