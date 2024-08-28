@@ -8,44 +8,32 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import ru.skypro.homework.dto.Login;
 import ru.skypro.homework.dto.Register;
-import ru.skypro.homework.service.AuthService;
+import ru.skypro.homework.service.RegService;
 
 /**
- * Класс для управления потоком данных при авторизации пользователя
+ * Класс для управления потоком данных при регистрации
  */
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
-public class AuthController {
+public class RegController {
 
-    private final AuthService authService;
+    private final RegService regService;
 
     /**
-     * Запрос на проверку авторизации пользователя
+     * Запрос на регистрацию и создание нового пользователя
      *
-     * @param login
+     * @param register
+     * @see ru.skypro.homework.model.User
      */
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Login login) {
-        if (authService.login(login.getUsername(), login.getPassword())) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
-
-    /*
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Register register) {
-        if (authService.register(register)) {
+        if (regService.register(register)) {
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
-
-     */
 }

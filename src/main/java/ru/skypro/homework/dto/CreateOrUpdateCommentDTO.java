@@ -6,8 +6,6 @@ import lombok.Data;
  * Создание ДТО
  */
 @Data
-public class Login {
-
-    private String username;
-    private String password;
+public class CreateOrUpdateCommentDTO {
+    private String text;
 }
