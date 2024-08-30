@@ -12,17 +12,21 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.stereotype.Service;
 import ru.skypro.homework.exceptions.InvalidPasswordException;
 import ru.skypro.homework.exceptions.UserNotFoundException;
 import ru.skypro.homework.repository.UserRepo;
 
 import java.util.Optional;
 
+import static liquibase.repackaged.net.sf.jsqlparser.util.validation.metadata.NamedObject.user;
+
 
 /**Интерфейс UserDetailsService используется
  для получения данных,
  связанных с пользователем.*/
 @RequiredArgsConstructor
+@Service
 public class UserDetailsServiceImpl implements UserDetailsManager {
 
     private static final Logger logger = LoggerFactory.getLogger(UserDetailsService.class);
@@ -33,7 +37,9 @@ public class UserDetailsServiceImpl implements UserDetailsManager {
     /*процесс поиска пользователя.*/
     @Override
     public UserDetails loadUserByUsername(String email) throws UserNotFoundException {
-        ru.skypro.homework.model.User user = userRepo.findByEmail(email).get();
+        Optional<ru.skypro.homework.model.User> byEmail = userRepo.findByEmail(email);
+        System.out.println(byEmail);
+        var user = byEmail.get();
         if (user == null) {
             throw new UserNotFoundException("User not found");
         }
