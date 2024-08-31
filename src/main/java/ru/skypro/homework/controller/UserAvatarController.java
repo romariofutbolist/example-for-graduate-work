@@ -8,26 +8,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import ru.skypro.homework.service.ImageService;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import ru.skypro.homework.service.UserAvatarService;
 
 @CrossOrigin(origins = "http://localhost:3000")
-@RestController
 @RequiredArgsConstructor
-@PreAuthorize("permitAll()")
-@RequestMapping("/images")
-public class ImageController {
+@RestController
+@RequestMapping("/avatars")
+public class UserAvatarController {
 
-    private final ImageService adImageService;
+    private final UserAvatarService userAvatarService;
 
     @Operation(
-            tags = "Images",
-            operationId = "getAdImage",
-            summary = "Get ad image",
+            tags = "UserAvatar",
+            operationId = "getUserAvatar",
+            summary = "Get user avatar",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -38,6 +35,11 @@ public class ImageController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized",
+                            content = @Content(schema = @Schema(hidden = true))
+                    ),
+                    @ApiResponse(
                             responseCode = "404",
                             description = "Not found",
                             content = @Content(schema = @Schema(hidden = true))
@@ -45,11 +47,11 @@ public class ImageController {
             }
     )
     @GetMapping("/{id}")
-    public void getAdImage(
-            @Parameter(name = "id", description = "Ad identifier") @PathVariable(name = "id") Integer id,
-            HttpServletResponse response
-    ) throws IOException {
-        adImageService.getAdImage(id, response);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> getUserAvatar(
+            @Parameter(name = "id", description = "User avatar identifier")
+            @PathVariable(name = "id") Integer id) {
+        return userAvatarService.getUserAvatar(id);
     }
 
 }

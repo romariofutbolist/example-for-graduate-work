@@ -3,8 +3,7 @@ package ru.skypro.homework.model;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Objects;
 
 /**
  * The Ad class represents the essence of the ad in the database.
@@ -14,59 +13,36 @@ import java.util.Set;
  */
 
 @Entity
-@Data
-@NoArgsConstructor
 @Table(name = "ads")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Builder
 public class Ad {
 
-    /**
-     * ID объявления
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-
-    /**
-     * Внешний ключ: ID автора из таблицы 'users'
-     *
-     * @see User
-     */
+    private Integer pk;
+    private Integer price;
+    private String title;
+    private String description;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
     private User user;
 
-    /**
-     * Внешний ключ: ссылка на фото из таблицы 'images'
-     *
-     * @see Image
-     */
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "image_id", referencedColumnName = "id")
-    private Image image;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Ad ad = (Ad) o;
+        return Objects.equals(price, ad.price)
+                && Objects.equals(title, ad.title)
+                && Objects.equals(description, ad.description)
+                && Objects.equals(user, ad.user);
+    }
 
-    /**
-     * Цена объявления
-     */
-    @Column(nullable = false)
-    private Integer price;
-
-    /**
-     * Заголовок объявления
-     */
-    @Column(nullable = false, length = 100)
-    private String title;
-
-    /**
-     * Описание товара
-     */
-    @Column(nullable = false)
-    private String description;
-
-    /**
-     * Внешний ключ: комментарии к объявлению из таблицы 'comments'
-     *
-     * @see Comment
-     */
-    @OneToMany(mappedBy = "ad", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Comment> comments = new HashSet<>();
+    @Override
+    public int hashCode() {
+        return Objects.hash(price, title, description, user);
+    }
 }

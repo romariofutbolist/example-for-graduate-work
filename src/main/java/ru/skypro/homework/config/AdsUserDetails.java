@@ -1,33 +1,33 @@
-package ru.skypro.homework.model;
+package ru.skypro.homework.config;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import ru.skypro.homework.dto.UserPrincipalDTO;
+import ru.skypro.homework.model.User;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
-@RequiredArgsConstructor
-public class UserPrincipal implements UserDetails {
+@AllArgsConstructor
+public class AdsUserDetails implements UserDetails {
 
-    private final UserPrincipalDTO userPrincipalDTO;
+    private User user;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + userPrincipalDTO.getRole());
-        return Collections.singletonList(authority);
+        SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority(user.getRole().name());
+        return List.of(grantedAuthority);
     }
 
     @Override
     public String getPassword() {
-        return userPrincipalDTO.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return userPrincipalDTO.getEmail();
+        return user.getEmail();
     }
 
     @Override
@@ -49,4 +49,5 @@ public class UserPrincipal implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
 }

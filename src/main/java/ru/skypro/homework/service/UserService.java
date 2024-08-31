@@ -1,24 +1,15 @@
 package ru.skypro.homework.service;
 
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.multipart.MultipartFile;
-import ru.skypro.homework.dto.UpdateUserDTO;
-import ru.skypro.homework.exceptions.ImageSizeExceededException;
+import org.springframework.http.ResponseEntity;
 import ru.skypro.homework.model.User;
-
-
-import java.io.IOException;
-import java.util.Optional;
 
 public interface UserService {
 
-    User getAuthorizedUser();
+    User saveUser(User user);
 
-    boolean setNewPassword(String email, String currentPassword, String newPassword);
+    User findUserByEmail(String email);
 
-    UpdateUserDTO updateMyProfile(UpdateUserDTO updateUserDTO);
+    void updateUserInfo(User user);
 
-    void updateMyImage(MultipartFile file, UserDetails userDetails) throws IOException, ImageSizeExceededException;
-
-    Optional<User> findById(Integer id);
+    ResponseEntity changeUserPassword(String username, String currentPassword, String newPassword);
 }

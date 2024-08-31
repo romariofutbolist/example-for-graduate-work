@@ -1,65 +1,30 @@
 package ru.skypro.homework.mappers;
 
 
-import lombok.Data;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.Mappings;
 import ru.skypro.homework.dto.CommentDTO;
-import ru.skypro.homework.dto.CommentsDTO;
+import ru.skypro.homework.dto.CreateOrUpdateCommentDTO;
 import ru.skypro.homework.model.Comment;
-import ru.skypro.homework.model.User;
 
-import java.time.ZoneId;
-import java.util.List;
-import java.util.stream.Collectors;
+@Mapper(
+        componentModel = MappingConstants.ComponentModel.SPRING,
+        imports = {java.util.Date.class, ru.skypro.homework.model.User.class}
+)
+public interface CommentMapper {
 
-/**
- * Маппер для преобразования сущности Comment
- *
- * @see Comment
- */
-@Data
-@Component
-public class CommentMapper {
+    @Mappings(value = {
+            @Mapping(target = "author", expression = "java(comment.getUser().getId())"),
+            @Mapping(target = "authorImage", expression = "java(comment.getUser().getImage())"),
+            @Mapping(target = "authorFirstName", expression = "java(comment.getUser().getFirstName())"),
+            @Mapping(target = "createdAt", expression = "java(comment.getCreatedAt().getTime())")
+    })
+    CommentDTO commentToCommentDTO(Comment comment);
 
-    private final ModelMapper modelMapper;
+    @Mappings(value = @Mapping(target = "createdAt", expression = "java(new Date())"))
+    Comment createOrUpdateCommentDTOToComment(CreateOrUpdateCommentDTO commentDTO);
 
-    @Value("${query.to.get.image}")
-    private String imageQuery;
-
-    /**
-     * Конвертирует в CommentDTO
-     *
-     * @param comment
-     * @return CommenDTO
-     * @see CommentDTO
-     */
-    public CommentDTO toDto(Comment comment) {
-        CommentDTO commentDTO = modelMapper.map(comment, CommentDTO.class);
-        commentDTO.setPk(comment.getId());
-        commentDTO.setCreatedAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-        commentDTO.setText(comment.getText());
-        User user = comment.getUser();
-        if (user != null) {
-            commentDTO.setAuthor(Math.toIntExact(user.getId()));
-            commentDTO.setAuthorFirstName(user.getFirstName());
-            commentDTO.setAuthorImage(imageQuery + user.getImage().getId());
-        }
-        return commentDTO;
-    }
-
-    /**
-     * Конвертирует в Comments DTO
-     *
-     * @param comments
-     * @return CommentsDTO
-     * @see CommentsDTO
-     */
-    public CommentsDTO toCommentsDTO(List<Comment> comments) {
-        CommentsDTO commentsDTO = new CommentsDTO();
-        commentsDTO.setCount(comments.size());
-        commentsDTO.setResults(comments.stream().map(this::toDto).collect(Collectors.toList()));
-        return commentsDTO;
-    }
 }

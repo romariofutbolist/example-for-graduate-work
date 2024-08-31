@@ -1,98 +1,42 @@
 package ru.skypro.homework.mappers;
 
 
-import lombok.Data;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.Mappings;
 import ru.skypro.homework.dto.AdDTO;
-import ru.skypro.homework.dto.AdsDTO;
 import ru.skypro.homework.dto.CreateOrUpdateAdDTO;
 import ru.skypro.homework.dto.ExtendedAdDTO;
 import ru.skypro.homework.model.Ad;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-/**
- * Маппер для преобразования сущности Ad
- *
- * @see Ad
- */
-@Data
-@Component
-public class AdMapper {
-
-    private final ModelMapper modelMapper;
-
-    @Value("${query.to.get.image}")
-    private String imageQuery;
-
-    public AdMapper(ModelMapper modelMapper) {
-        this.modelMapper = modelMapper;
-    }
-
-    /**
-     * Конвертирует в AdsDTO
-     *
-     * @param ad
-     * @return AdsDTO
-     * @see AdsDTO
-     */
-    public AdsDTO convertToAdsDTO(List<Ad> ad) {
-        AdsDTO adsDTO = new AdsDTO();
-        adsDTO.setCount(ad.size());
-        adsDTO.setResults(ad.stream().map(this::convertToAdDTO).collect(Collectors.toList()));
-        return adsDTO;
-    }
-
-    /**
-     * Конвертирует в AdDTO
-     *
-     * @param ad
-     * @return AdDTO
-     * @see AdDTO
-     */
-    public AdDTO convertToAdDTO(Ad ad) {
-        AdDTO adDTO = modelMapper.map(ad, AdDTO.class);
-        adDTO.setPk(ad.getId());
-        adDTO.setAuthor(Math.toIntExact(ad.getUser() != null ? ad.getUser().getId() : null));
-        adDTO.setImage(imageQuery + ad.getImage().getId());
-        return adDTO;
-    }
-
-    /**
-     * Конвертирует в ExtendedAdDTO
-     *
-     * @param ad
-     * @return ExtendedAdDTO
-     * @see ExtendedAdDTO
-     */
-    public ExtendedAdDTO convertToExtendedAd(Ad ad) {
-        ExtendedAdDTO extendedAdDTO = modelMapper.map(ad, ExtendedAdDTO.class);
-        extendedAdDTO.setPk(ad.getId());
-        if (ad.getUser() != null) {
-            extendedAdDTO.setAuthorFirstName(ad.getUser().getFirstName());
-            extendedAdDTO.setAuthorLastName(ad.getUser().getLastName());
-            extendedAdDTO.setEmail(ad.getUser().getEmail());
-            extendedAdDTO.setPhone(ad.getUser().getPhone());
-            extendedAdDTO.setImage(imageQuery + ad.getImage().getId());
-            extendedAdDTO.setDescription(ad.getDescription());
-            extendedAdDTO.setTitle(ad.getTitle());
-            extendedAdDTO.setPrice(ad.getPrice());
+@Mapper(
+        componentModel = MappingConstants.ComponentModel.SPRING,
+        imports = {
+                ru.skypro.homework.model.User.class,
+                ru.skypro.homework.model.Ad.class
         }
-        return extendedAdDTO;
-    }
+)
+public interface AdMapper {
 
-    /**
-     * Конвертирует CreateOrUpdateAdDTO в Ad
-     *
-     * @param createOrUpdateAdDTO
-     * @return Ad
-     * @see Ad
-     * @see CreateOrUpdateAdDTO
-     */
-    public Ad convertCreatDTOToAd(CreateOrUpdateAdDTO createOrUpdateAdDTO) {
-        return modelMapper.map(createOrUpdateAdDTO, Ad.class);
-    }
+    @Mappings(value = {
+            @Mapping(target = "author", expression = "java(ad.getUser().getId())"),
+            @Mapping(target = "image", expression = """
+                    java("/images/" + ad.getPk())
+                    """)
+    })
+    AdDTO adToAdDTO(Ad ad);
+
+    Ad createOrUpdateAdDTOToAd(CreateOrUpdateAdDTO adDTO);
+
+    @Mappings(value = {
+            @Mapping(target = "authorFirstName", expression = "java(ad.getUser().getFirstName())"),
+            @Mapping(target = "authorLastName", expression = "java(ad.getUser().getLastName())"),
+            @Mapping(target = "email", expression = "java(ad.getUser().getEmail())"),
+            @Mapping(target = "image", expression = """
+                    java("/images/" + ad.getPk())
+                    """)
+    })
+    ExtendedAdDTO adToExtendedAdDTO(Ad ad);
+
 }

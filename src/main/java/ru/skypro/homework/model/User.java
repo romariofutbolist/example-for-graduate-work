@@ -1,83 +1,58 @@
 package ru.skypro.homework.model;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import ru.skypro.homework.dto.Role;
+import lombok.*;
+import ru.skypro.homework.enums.Role;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Objects;
 
 /**
  * The User class represents a user entity in the database. It stores information about a user,
  * including their unique identifier (id), username, password, first name, last name, phone number, email associated image and role.
  */
 @Entity
-@Data
-@NoArgsConstructor
 @Table(name = "users")
+@NoArgsConstructor
+@Getter
+@Setter
+@ToString
 public class User {
 
-    /**
-     * Id пользователя
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    /**
-     * Email - он же login
-     */
     @Column(nullable = false, unique = true)
     private String email;
 
-    /**
-     * Пароль пользователя
-     */
     @Column(nullable = false)
     private String password;
 
-    /**
-     * Имя пользователя
-     */
     @Column(nullable = false)
     private String firstName;
 
-    /**
-     * Фамилия пользователя
-     */
     @Column(nullable = false)
     private String lastName;
 
-    /**
-     * Номер телефона
-     */
     @Column(nullable = false)
     private String phone;
 
-    /**
-     * Роль
-     */
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING)  //используется для хранения значений типа enum в базе данных в виде строк.
     private Role role;
+    private String image;
 
-    /**
-     * Id картинки
-     */
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "image_id", referencedColumnName = "id")
-    private Image image;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(email, user.email);
+    }
 
-    /**
-     * Коллекция объявлений
-     */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Ad> ads = new HashSet<>();
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(email);
+    }
 
-    /**
-     * Коллекция комментариев
-     */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<Comment> comments = new HashSet<>();
 }

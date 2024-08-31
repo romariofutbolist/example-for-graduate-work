@@ -1,101 +1,166 @@
 package ru.skypro.homework.controller;
 
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.NewPasswordDTO;
 import ru.skypro.homework.dto.UpdateUserDTO;
 import ru.skypro.homework.dto.UserDTO;
-import ru.skypro.homework.exceptions.ImageSizeExceededException;
 import ru.skypro.homework.mappers.UserMapper;
+import ru.skypro.homework.model.User;
+import ru.skypro.homework.service.UserAvatarService;
 import ru.skypro.homework.service.UserService;
 
 import java.io.IOException;
 
-/**
- * Класс для управления потоком данных при работе с пользователями
- */
 @Slf4j
+@CrossOrigin(origins = "http://localhost:3000")
+@AllArgsConstructor
 @RestController
-@CrossOrigin(value = "http://localhost:3000")
-@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserService userService;
     private final UserMapper userMapper;
+    private final UserService userService;
+    private final UserAvatarService userAvatarService;
 
-    /**
-     * Запрос на изменение пароля
-     *
-     * @param newPasswordDTO
-     * @param authentication
-     */
+    @Operation(
+            tags = "Users",
+            operationId = "setPassword",
+            summary = "Password update",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "User`s new password info",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "OK",
+                            content = @Content(schema = @Schema(hidden = true))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized",
+                            content = @Content(schema = @Schema(hidden = true))
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Forbidden",
+                            content = @Content(schema = @Schema(hidden = true))
+                    )
+            }
+    )
     @PostMapping("/set_password")
-    public ResponseEntity<String> setNewPassword(@RequestBody NewPasswordDTO newPasswordDTO,
-                                                 @NonNull Authentication authentication) {
-        if (userService.setNewPassword(authentication.getName(),
-                newPasswordDTO.getCurrentPassword(),
-                newPasswordDTO.getNewPassword())) {
-            return ResponseEntity.ok("Password was update");
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Password don`t match!");
-        }
+    public ResponseEntity setPassword(@RequestBody NewPasswordDTO newPassword, Authentication authentication) {
+        log.info("New password: {}", newPassword);
+
+        return userService.changeUserPassword(
+                authentication.getName(),
+                newPassword.getCurrentPassword(),
+                newPassword.getNewPassword()
+        );
     }
 
-    /**
-     * Запрос на получение информации об авторизированном пользователе
-     *
-     * @return UserDTO
-     * @see UserDTO
-     */
+    @Operation(
+            tags = "Users",
+            operationId = "getUser",
+            summary = "Getting information about an authorized user",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "OK",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserDTO.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized",
+                            content = @Content(schema = @Schema(hidden = true))
+                    )
+            }
+    )
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getMyProfile(/*@PathVariable Long id*/) {
-//        return ResponseEntity.ok(userService.getAuthorizedUser());
-        return ResponseEntity.ok(userMapper.convertToUserDTO(userService.getAuthorizedUser()));
-//                userService.findById(id);
+    public ResponseEntity<UserDTO> getUser(Authentication authentication) {
+        User user = userService.findUserByEmail(authentication.getName());
+
+        return ResponseEntity.ok(userMapper.userToUserDTO(user));
     }
 
-    /**
-     * Запрос на редактирование данных зарегестрированного пользователя
-     *
-     * @param updateUserDTO
-     * @return UpdateUserDTO
-     * @see UpdateUserDTO
-     */
+    @Operation(
+            tags = "Users",
+            operationId = "updateUser",
+            summary = "Updating information about an authorized user",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "User`s new info",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "OK",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UpdateUserDTO.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized",
+                            content = @Content(schema = @Schema(hidden = true))
+                    )
+            }
+    )
     @PatchMapping("/me")
-    public ResponseEntity<UpdateUserDTO> updateMyProfile(@RequestBody UpdateUserDTO updateUserDTO) {
-        if (updateUserDTO == null) {
-            return ResponseEntity.notFound().build();
-        }
-        userService.updateMyProfile(updateUserDTO);
-        return ResponseEntity.ok(updateUserDTO);
+    public ResponseEntity<UpdateUserDTO> updateUser(
+            @RequestBody UpdateUserDTO updateUser,
+            Authentication authentication
+    ) {
+        User user = userMapper.updateUserDTOToUser(updateUser);
+        user.setEmail(authentication.getName());
+
+        userService.updateUserInfo(user);
+
+        return ResponseEntity.ok().build();
     }
 
-    /**
-     * Запрос на редактирование аватара пользователя
-     *
-     * @param image
-     * @param userDetails
-     * @throws IOException
-     * @throws ImageSizeExceededException
-     */
-    @PatchMapping(path = "/me/image",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<?> updateMyImage(@RequestParam MultipartFile image,
-                                           @AuthenticationPrincipal UserDetails userDetails)
-            throws IOException, ImageSizeExceededException {
-        userService.updateMyImage(image, userDetails);
+    @Operation(
+            tags = "Users",
+            operationId = "updateUserImage",
+            summary = "Update the avatar of an authorized user",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "User`s new avatar",
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "OK",
+                            content = @Content(schema = @Schema(hidden = true))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized",
+                            content = @Content(schema = @Schema(hidden = true))
+                    )
+            }
+    )
+    @PatchMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity updateUserImage(
+            @RequestParam MultipartFile image,
+            Authentication authentication
+    ) throws IOException {
+        userAvatarService.saveUserAvatar(authentication.getName(), image);
+
         return ResponseEntity.ok().build();
     }
 

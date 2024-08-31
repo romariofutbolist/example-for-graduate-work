@@ -1,53 +1,57 @@
 package ru.skypro.homework.model;
 
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Objects;
 
 /**
  * Создание сущности Comment
  */
 @Entity
-@Data
-@NoArgsConstructor
 @Table(name = "comments")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Builder  //Аннотация @Builder в Lombok позволяет создавать объекты более лаконичным и выразительным способом, делая код более читаемым и поддерживаемым.
 public class Comment {
 
-    /**
-     * ID комментария
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Integer id;
-
-    /**
-     * Внешний ключ: ID автора из таблицы 'users'
-     *
-     * @see User
-     */
+    private Integer pk;
+    @Column(name = "created_at")
+    private Date createdAt;
+    private String text;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id")
     private User user;
-
-    /**
-     * Внешний ключ: ссылка на объявления из 'ads'
-     *
-     * @see Ad
-     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ad_id", referencedColumnName = "id")
+    @JoinColumn(name = "ad_id")
     private Ad ad;
 
-    /**
-     * Дата и время создания комментария в миллисекундах с 00:00:00 01.01.1970
-     */
-    public LocalDateTime createdAt;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Comment comment = (Comment) o;
+        return Objects.equals(text, comment.text);
+    }
 
-    /**
-     * Текст комментария
-     */
-    public String text;
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(text);
+    }
+
+    @Override
+    public String toString() {
+        return "Comment{" +
+                "pk=" + pk +
+                ", createdAt=" + createdAt +
+                ", text='" + text + '\'' +
+                ", user=" + user +
+                ", ad=" + ad +
+                '}';
+    }
 }

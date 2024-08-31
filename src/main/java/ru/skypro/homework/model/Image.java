@@ -1,55 +1,45 @@
 package ru.skypro.homework.model;
 
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
+import java.util.Objects;
 
-/**
- * The Avatar class represents a photo entity in the database. It is used to store binary image data associated with a user.
- */
 @Entity
-@Data
-@NoArgsConstructor
 @Table(name = "images")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@Builder
 public class Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    @Column(name = "id")
     private Integer id;
-
-    /**
-     * Id юзера
-     */
-    @OneToOne(mappedBy = "image")
-//    @JoinColumn(name = "user_id")
-    private User user;
-
-    /**
-     * Id объявления
-     //     */
-    @OneToOne(mappedBy = "image")
-//    @JoinColumn(name = "ad_id")
-    private Ad ad;
-
-    /**
-     * Размер фото
-     */
+    private String path;
     @Column(name = "file_size")
-    private Long fileSize;
-
+    private long fileSize;
     @Column(name = "media_type")
     private String mediaType;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "ad_id")
+    private Ad ad;
 
-    /**
-     * Путь к файлу
-     */
-    @Column(name = "file_path")
-    private String filePath;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Image adImage = (Image) o;
+        return fileSize == adImage.fileSize
+                && Objects.equals(path, adImage.path)
+                && Objects.equals(mediaType, adImage.mediaType);
+    }
 
-    @Lob
-    @Column(name = "data")
-    private byte[] data;
+    @Override
+    public int hashCode() {
+        return Objects.hash(path, fileSize, mediaType);
+    }
 }
