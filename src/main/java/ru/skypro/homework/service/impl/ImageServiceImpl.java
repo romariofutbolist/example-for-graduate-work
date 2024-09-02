@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
@@ -47,8 +48,7 @@ public class ImageServiceImpl implements ImageService {
             bis.transferTo(bos);
         }
 
-        final Image image1 = imageRepo.findById(ad.getPk())
-                .orElseGet(Image::new);
+        Image image1 = imageRepo.findById(ad.getPk()).orElseGet(Image::new);
         image1.setPath(filePath.toString());
         image1.setFileSize(image.getSize());
         image1.setMediaType(image.getContentType());
@@ -57,10 +57,12 @@ public class ImageServiceImpl implements ImageService {
         return imageRepo.save(image1);
     }
 
+
     @Override
     public Image saveAdImage(Image image) {
         return imageRepo.save(image);
     }
+
 
     @Override
     public void getAdImage(Integer id, HttpServletResponse response) throws IOException {
@@ -83,5 +85,7 @@ public class ImageServiceImpl implements ImageService {
     private String getExtension(String fileName) {
         return fileName.substring(fileName.lastIndexOf(".") + 1);
     }
+
+
 
 }
